@@ -1,0 +1,20 @@
+sample:
+  name: Pulse counter project
+tests:
+  sample.basic.button:
+    tags:
+      - button
+      - gpio
+      - pulse
+      - uart
+      - led
+    filter: dt_enabled_alias_with_parent_compat("pulseinput", "gpio-keys")
+            dt_enabled_alias_with_parent_compat("led0", "gpio-leds")
+    integration_platforms:
+      - esp32c3_devkitm
+      - esp32_devkitc_wroom
+      - rpi_pico
+    depends_on: gpio
+                uart
+                led
+    harness: pulse counter

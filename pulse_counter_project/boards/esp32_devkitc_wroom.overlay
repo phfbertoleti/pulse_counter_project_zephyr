@@ -1,0 +1,44 @@
+/ {
+    aliases {
+        pulseinput = &button1;
+        led0 = &led0;
+    };
+};
+
+/ {
+    buttons {
+        compatible = "gpio-keys";
+        button1: button_1 {
+            gpios = <&gpio0 23 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "Pulse Input";
+			zephyr,code = <INPUT_KEY_1>;
+        };
+
+     leds {
+        compatible = "gpio-leds";
+        led0: led {
+            gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+            label = "Breathing light";
+        };
+      };   
+    };
+};
+
+&pinctrl {
+uart1_default: uart1_default {
+		group1 {
+			pinmux = <UART1_TX_GPIO22>;
+		};
+		group2 {
+			pinmux = <UART1_RX_GPIO23>;
+			bias-pull-up;
+		};
+	};
+};
+
+&uart1 {
+	current-speed = <115200>;
+	pinctrl-0 = <&uart1_default>;
+	pinctrl-names = "default";
+    status = "okay";
+};

@@ -1,0 +1,44 @@
+#include <dt-bindings/input/input-event-codes.h>
+
+/ {
+    aliases {
+        pulseinput = &button1;
+        led0 = &led0;
+    };
+};
+
+/ {
+    buttons {
+        compatible = "gpio-keys";
+        status = "okay";
+        
+        button1: button_1 {
+            gpios = <&gpio0 2 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "Pulse Input";
+			zephyr,code = <INPUT_KEY_1>;
+        };  
+    };
+
+    leds {
+        status = "okay";
+    };   
+};
+
+&pinctrl {
+        uart1_default: uart1_default {
+		group1 {
+			pinmux = <UART1_TX_P4>;
+		};
+		group2 {
+			pinmux = <UART1_RX_P5>;
+			input-enable;
+		};
+	};
+};
+
+&uart1 {
+        current-speed = <115200>;
+	    status = "okay";
+	    pinctrl-0 = <&uart1_default>;
+	    pinctrl-names = "default";
+};

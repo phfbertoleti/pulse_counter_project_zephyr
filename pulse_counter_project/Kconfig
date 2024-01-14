@@ -1,0 +1,24 @@
+mainmenu "Pulse counter project"
+
+config BREATHING_LIGHT_TASK_PRIO
+    int "Breathing light task priority"
+    default 7
+    
+config BREATHING_LIGHT_TASK_STACK_SIZE
+    int "Breathing light task stack size"
+    default 1024
+
+config PULSE_COUNTER_TASK_PRIO
+    int "Breathing light task priority"
+    default 8
+        
+config PULSE_COUNTER_TASK_STACK_SIZE
+    int "Breathing light task stack size"
+    default 1024
+
+config PULSE_COUNTER_VRBOSE_DEBUG_ENABLE
+    bool "Enable/disable pulse counter verbose debug"
+    default y 
+        
+
+source "Kconfig.zephyr"   

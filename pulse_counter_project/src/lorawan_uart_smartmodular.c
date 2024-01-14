@@ -3,8 +3,10 @@
 #include <zephyr/drivers/uart.h>
 #include <stdio.h>
 #include <string.h>
+#include <zephyr/logging/log.h>
 #include "lorawan_uart_smartmodular.h"
-#include "specific_debug_filters.h"
+
+LOG_MODULE_DECLARE(pulse_counter_lorawan);
 
 /* Define time to receive response from smart modular lorawan module */
 #define TIME_TO_RECEIVE_RESPONSE   1000 //ms
@@ -13,7 +15,7 @@
 #define LORAWAN_PORT               12
 
 /* Load device tree defs for lorawan uart */
-const struct device *uart1 = DEVICE_DT_GET(DT_NODELABEL(uart1));
+const struct device *uart_lorawan = DEVICE_DT_GET(DT_NODELABEL(uart1));
 
 /* LoRaWAN ABP credentials */
 static const char DEVADDR[] = "00:00:00:00";
@@ -50,21 +52,19 @@ void rcv_response_lorawan_smartmodular_uart(void);
 int init_lorawan_smartmodular_uart(void)
 {
     int rc;
-    rc = uart_configure(uart1, &uart_cfg);
+	int init_lorawan_smartmodular_uart_status = 0;
+
+    LOG_INF("Starting LoRaWAN UART Smart Modular module...");
+
+    rc = uart_configure(uart_lorawan, &uart_cfg);
     
     if (rc)
     {
-	    #ifdef ENABLE_DEBUG_LORAWAN_UART
-			printk("Failed to configure lorawan uart");
-		#endif
-
+        LOG_INF("Failed to configure lorawan uart");
+		init_lorawan_smartmodular_uart_status = 0;
 		goto END_INIT_LORAWAN_SMART_MODULAR;
 	}
-    
-	#ifdef ENABLE_DEBUG_LORAWAN_UART
-        printk("Lorawan uart successfully configured");
-	#endif
-    
+   
     /* Wake up lorawan module */
 	wake_up_lorawan_smartmodular_uart();
 
@@ -89,9 +89,11 @@ int init_lorawan_smartmodular_uart(void)
 	/* Configure Application EUI */
 	appeui_smartmodular_uart();
 
+    LOG_INF("LoRaWAN UART Smart Modular module has been started");
+    init_lorawan_smartmodular_uart_status = 1;
 
 END_INIT_LORAWAN_SMART_MODULAR:	
-	return rc;
+	return init_lorawan_smartmodular_uart_status;
 }
 
 /* Function: send AT command to wake up lorawan module
@@ -240,7 +242,7 @@ void send_custom_at_command_lorawan_smartmodular_uart(char *at_command)
 
 	for (i=0; i<msg_len; i++) 
     {
-		uart_poll_out(uart1, at_command[i]);
+		uart_poll_out(uart_lorawan, at_command[i]);
 	}
 }
 
@@ -250,14 +252,12 @@ void send_custom_at_command_lorawan_smartmodular_uart(char *at_command)
  */
 void rcv_response_lorawan_smartmodular_uart(void)
 {
- 
     char c;
-    printk("Receiving response from smart modular lorawan module...\n\r");
 		
-	while (!uart_poll_in(uart1, &c)) 
+    LOG_INF("Bytes received from LoRaWAN module:");
+
+	while (!uart_poll_in(uart_lorawan, &c)) 
 	{
-        #ifdef ENABLE_DEBUG_LORAWAN_UART
-            printk("%c", c);
-    	#endif
+        LOG_INF("%c", c);
 	}
 }

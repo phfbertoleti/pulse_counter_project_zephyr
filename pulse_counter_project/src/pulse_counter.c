@@ -2,14 +2,12 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/sys/util.h>
-#include <zephyr/sys/printk.h>
-#include <inttypes.h>
 #include <string.h>
+#include <zephyr/logging/log.h>
 #include "pulse_counter.h"
 #include "lorawan_uart_smartmodular.h"
-#include "prios.h"
-#include "stacks_sizes.h"
-#include "specific_debug_filters.h"
+
+LOG_MODULE_DECLARE(pulse_counter_lorawan);
 
 /*
  * Get pulse input configuration from the devicetree pulseinput alias.
@@ -48,7 +46,7 @@ void pulse_counter_task(void *p1, void *p2, void *p3);
 static void pulse_debounce_timer_callback(struct k_timer *timer);
 
 /* Define thread stack */
-K_THREAD_STACK_DEFINE(pulse_counter_thread_stack, PULSE_COUNTER_THREAD_STACKSIZE);
+K_THREAD_STACK_DEFINE(pulse_counter_thread_stack, CONFIG_PULSE_COUNTER_TASK_STACK_SIZE);
 
 /* Function: pulse detection callback
  * Params: callback params
@@ -56,8 +54,8 @@ K_THREAD_STACK_DEFINE(pulse_counter_thread_stack, PULSE_COUNTER_THREAD_STACKSIZE
  */
 void pulse_detected(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
 {
-	#ifdef ENABLE_DEBUG_MSG_PULSE_COUNTER
-        printk("[PULSE_COUNTER] Pulse has been detected\n");
+	#if CONFIG_PULSE_COUNTER_VRBOSE_DEBUG_ENABLE
+        LOG_INF("[PULSE_COUNTER] Pulse has been detected");
     #endif
 
 	k_timer_start(&pulse_debounce_timer, K_MSEC(PULSE_DEBOUNCE_TIME), K_NO_WAIT);
@@ -69,8 +67,8 @@ void pulse_detected(const struct device *dev, struct gpio_callback *cb, uint32_t
  */
 static void pulse_debounce_timer_callback(struct k_timer *timer)
 {
-	#ifdef ENABLE_DEBUG_MSG_PULSE_COUNTER
-        printk("[PULSE_COUNTER] Pulse count has been updated!\n");
+	#if CONFIG_PULSE_COUNTER_VRBOSE_DEBUG_ENABLE
+        LOG_INF("[PULSE_COUNTER] Pulse count has been updated!");
     #endif
 
 	pulse_counter++;
@@ -89,8 +87,8 @@ int init_pulse_counter(void)
 
     if (!gpio_is_ready_dt(&pulseinput)) 
 	{
-		#ifdef ENABLE_DEBUG_MSG_PULSE_COUNTER_CONFIG
-            printk("[PULSE_COUNTER] Error: pulse input device %s is not ready\n", pulseinput.port->name);
+		#if CONFIG_PULSE_COUNTER_VRBOSE_DEBUG_ENABLE
+            LOG_INF("[PULSE_COUNTER] Error: pulse input device %s is not ready", pulseinput.port->name);
         #endif
 
 		return 0;
@@ -99,8 +97,8 @@ int init_pulse_counter(void)
 	ret = gpio_pin_configure_dt(&pulseinput, GPIO_INPUT);
 	if (ret != 0) 
 	{
-        #ifdef ENABLE_DEBUG_MSG_PULSE_COUNTER_CONFIG 
-		    printk("[PULSE_COUNTER] Error %d: failed to configure %s pin %d\n", ret, pulseinput.port->name, pulseinput.pin);
+        #if CONFIG_PULSE_COUNTER_VRBOSE_DEBUG_ENABLE
+		    LOG_INF("[PULSE_COUNTER] Error %d: failed to configure %s pin %d", ret, pulseinput.port->name, pulseinput.pin);
         #endif
 
 		return 0;
@@ -111,8 +109,8 @@ int init_pulse_counter(void)
 					      GPIO_INT_EDGE_TO_ACTIVE);
 	if (ret != 0) 
 	{
-		#ifdef ENABLE_DEBUG_MSG_PULSE_COUNTER_CONFIG 
-            printk("[PULSE_COUNTER] Error %d: failed to configure interrupt on %s pin %d\n", ret, pulseinput.port->name, pulseinput.pin);
+		#if CONFIG_PULSE_COUNTER_VRBOSE_DEBUG_ENABLE 
+            LOG_INF("[PULSE_COUNTER] Error %d: failed to configure interrupt on %s pin %d", ret, pulseinput.port->name, pulseinput.pin);
         #endif
 
 		return 0;
@@ -121,8 +119,8 @@ int init_pulse_counter(void)
 	gpio_init_callback(&pulseinput_cb_data, pulse_detected, BIT(pulseinput.pin));
 	gpio_add_callback(pulseinput.port, &pulseinput_cb_data);
 	
-    #ifdef ENABLE_DEBUG_MSG_PULSE_COUNTER_CONFIG 
-        printk("[PULSE_COUNTER] Set up pulse input at %s pin %d\n", pulseinput.port->name, pulseinput.pin);
+    #if CONFIG_PULSE_COUNTER_VRBOSE_DEBUG_ENABLE
+        LOG_INF("[PULSE_COUNTER] Set up pulse input at %s pin %d\n", pulseinput.port->name, pulseinput.pin);
     #endif
 
     /* Init pulse debounce timer */
@@ -131,15 +129,15 @@ int init_pulse_counter(void)
 	/* Init pulse counter */
 	pulse_counter = 0;
 
-    #ifdef ENABLE_DEBUG_MSG_PULSE_COUNTER_CONFIG
-	    printk("[PULSE_COUNTER] All set! Ready to read pulses\n");
+    #if CONFIG_PULSE_COUNTER_VRBOSE_DEBUG_ENABLE
+	    LOG_INF("[PULSE_COUNTER] All set! Ready to read pulses");
     #endif
 
     /* Create pulse counter thread */
     k_thread_create(&pulse_counter_thread_data, pulse_counter_thread_stack,
 			      K_THREAD_STACK_SIZEOF(pulse_counter_thread_stack),
 			      pulse_counter_task, NULL, NULL, NULL,
-			      PULSE_COUNTER_THREAD_PRIORITY, 0, K_NO_WAIT);
+			      CONFIG_PULSE_COUNTER_TASK_PRIO, 0, K_NO_WAIT);
 
     return 1;
 }
@@ -162,8 +160,8 @@ void pulse_counter_task(void *p1, void *p2, void *p3)
     while (1) 
 	{
         /* Main loop */
-		#ifdef ENABLE_DEBUG_MSG_PULSE_COUNTER
-		    printk("[PULSE_COUNTER] Pulse counter value: %d\n", get_pulse_counter());
+		#if CONFIG_PULSE_COUNTER_VRBOSE_DEBUG_ENABLE
+		    LOG_INF("[PULSE_COUNTER] Pulse counter value: %d", get_pulse_counter());
 		#endif
 
         /* Send pulse counter as a LoRaWAN message */

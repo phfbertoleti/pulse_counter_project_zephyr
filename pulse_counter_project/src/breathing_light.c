@@ -3,11 +3,10 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/sys/__assert.h>
+#include <zephyr/logging/log.h>
 #include "breathing_light.h"
-#include "prios.h"
-#include "stacks_sizes.h"
-#include "specific_debug_filters.h"
 
+LOG_MODULE_DECLARE(pulse_counter_lorawan);
 
 /* Specify which node is used for LED in device tree*/
 #define LED0_NODE DT_ALIAS(led0)
@@ -16,7 +15,7 @@
 #define BREATHING_LIGHT_TIME_MS              1000
 
 /* Define thread stack size */
-K_THREAD_STACK_DEFINE(breathing_light_thread_stack, BREATHING_LIGHT_THREAD_STACKSIZE);
+K_THREAD_STACK_DEFINE(breathing_light_thread_stack, CONFIG_BREATHING_LIGHT_TASK_STACK_SIZE);
 
 /* Load beathing light LED device tree data */
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
@@ -35,25 +34,35 @@ void breathing_light_task(void *p1, void *p2, void *p3);
 int init_breathing_light(void)
 {
     int ret;
+	int init_breathing_light_status = 0;
+
+    LOG_INF("Starting breathing light module...");
 
 	if (!gpio_is_ready_dt(&led)) 
     {
-		return 0;
+		init_breathing_light_status = 0;
+		goto END_BREATHING_LIGHT_INIT;
 	}
 
 	ret = gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE);
 	if (ret < 0) 
     {
-		return 0;
+		init_breathing_light_status = 0;
+		goto END_BREATHING_LIGHT_INIT;
 	}
 
     /* Create pulse counter thread */
     k_thread_create(&breathing_light_thread_data, breathing_light_thread_stack,
 			      K_THREAD_STACK_SIZEOF(breathing_light_thread_stack),
 			      breathing_light_task, NULL, NULL, NULL,
-			      BREATHING_LIGHT_THREAD_PRIORITY, 0, K_NO_WAIT);
+			      CONFIG_BREATHING_LIGHT_TASK_PRIO, 0, K_NO_WAIT);
 
-    return 1;
+    LOG_INF("Breathing light module has been started");				  
+
+    init_breathing_light_status = 1;
+	
+END_BREATHING_LIGHT_INIT:
+    return init_breathing_light_status;
 }
 
 /* Function: init breathing light, by setting up LED output
@@ -65,11 +74,6 @@ void breathing_light_task(void *p1, void *p2, void *p3)
     while (1) 
     {
 		gpio_pin_toggle_dt(&led);
-
-        #ifdef ENABLE_DEBUG_MSG_BREATHING_LIGHT_LED_TOGGLING
-            printk("[BREATHING LIGHT] Breathing light LED has been toggled\n");
-        #endif
-
 		k_msleep(BREATHING_LIGHT_TIME_MS);
 	}
 }

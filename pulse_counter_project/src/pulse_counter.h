@@ -6,6 +6,5 @@
 #endif
 
 /* Prototypes */
-void pulse_detected(const struct device *dev, struct gpio_callback *cb, uint32_t pins);
 int init_pulse_counter(void);
 int get_pulse_counter(void);

@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "pulse_counter.h": "c",
-        "specific_debug_filters.h": "c"
+        "specific_debug_filters.h": "c",
+        "stdio.h": "c"
     }
 }

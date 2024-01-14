@@ -11,7 +11,7 @@
 #include "breathing_light.h"
 #include "lorawan_uart_smartmodular.h"
 
-LOG_MODULE_REGISTER(lorawan_gnss_tracker);
+LOG_MODULE_REGISTER(pulse_counter_lorawan);
 
 int main(void)
 {

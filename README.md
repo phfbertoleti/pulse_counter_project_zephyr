@@ -22,15 +22,15 @@ Assuming this code is placed into zephyrproject/zephyr folder, you can compile i
 
 * For ESP32 WROOM, use the following command for compiling this project:
 
-`west build -p always -b esp32_devkitc_wroom pulse_counter_project/`
+`west build -p always -b esp32_devkitc_wroom pulse_counter_project_zephyr`
 
 * For ESP32-C3, use the following command for compiling this project:
 
-`west build -p always -b esp32c3_devkitm pulse_counter_project/`
+`west build -p always -b esp32c3_devkitm pulse_counter_project_zephyr`
 
 * For RP2040, use the following command for compiling this project:
 
-`west build -p always -b rpi_pico pulse_counter_project/`
+`west build -p always -b rpi_pico pulse_counter_project_zephyr`
 
 And for flashing, simply use:
 

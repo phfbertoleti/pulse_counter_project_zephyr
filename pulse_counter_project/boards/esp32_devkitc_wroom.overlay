@@ -9,7 +9,7 @@
     buttons {
         compatible = "gpio-keys";
         button1: button_1 {
-            gpios = <&gpio0 23 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+            gpios = <&gpio0 12 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
 			label = "Pulse Input";
 			zephyr,code = <INPUT_KEY_1>;
         };
